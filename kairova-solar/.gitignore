@@ -5,3 +5,7 @@ dist
 .env
 .env.*
 .wrangler
+
+# Image masters for the solar story. Derivatives in public/solar-story/ are
+# committed and deployed; these full-size sources are not.
+assets-src

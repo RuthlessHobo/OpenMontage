@@ -10,6 +10,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet" />
+    <!-- First plate of the solar story: it is above the fold on short viewports
+         and is what ScrollTrigger measures against, so fetch it early. -->
+    <link
+      rel="preload"
+      as="image"
+      href="/solar-story/assembled-1600.avif"
+      type="image/avif"
+      imagesrcset="/solar-story/assembled-960.avif 960w, /solar-story/assembled-1600.avif 1600w, /solar-story/assembled-2400.avif 2400w"
+      imagesizes="100vw"
+    />
   </head>
   <body>
     <div id="root"></div>

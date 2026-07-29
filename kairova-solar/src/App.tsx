@@ -3,7 +3,7 @@ import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import TrustStrip from './components/TrustStrip'
 import Hero from './sections/Hero'
-import EnergyStory from './sections/EnergyStory'
+import SolarSystemStory from './sections/SolarSystemStory'
 import Services from './sections/Services'
 import Estimator from './sections/Estimator'
 import Process from './sections/Process'
@@ -38,7 +38,11 @@ export default function App() {
       <main>
         <Hero />
         <TrustStrip />
-        <EnergyStory />
+        {/* SolarSystemStory carries the "#why-solar" anchor that the nav links
+            to. It replaces the old EnergyStory diagram, which told the same
+            story as a flat SVG. That file is left in src/sections/ untouched:
+            swap the import above to bring it back. */}
+        <SolarSystemStory />
         <Services />
         <Estimator />
         <Process />
