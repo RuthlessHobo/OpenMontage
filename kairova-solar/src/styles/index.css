@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Kairova Solar is a fictional demonstration brand. */
+
+@layer base {
+  html {
+    scroll-behavior: auto;
+    /* The <html> element is the scroll container (Lenis drives window scroll),
+       so the horizontal clip must live here, not only on <body>, to contain
+       transient entrance-animation transforms (e.g. gsap.from x:28) that would
+       otherwise let the page scroll sideways a few px on mobile. */
+    overflow-x: clip;
+  }
+  body {
+    @apply bg-ink text-ivory font-body antialiased;
+    overflow-x: clip;
+  }
+  ::selection {
+    background: #f5c84c;
+    color: #090b0d;
+  }
+  :focus-visible {
+    outline: 2px solid #f5c84c;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .container-k {
+    @apply mx-auto w-full max-w-[1280px] px-5 sm:px-8 lg:px-12;
+  }
+  .tag-k {
+    @apply inline-flex items-center gap-2 font-body text-[11px] font-semibold uppercase tracking-[0.22em] text-mist;
+  }
+  .tag-k::before {
+    content: '';
+    @apply block h-[2px] w-6 bg-amber;
+  }
+  .display-xl {
+    @apply font-display font-semibold leading-[0.98] tracking-[-0.01em];
+    font-size: clamp(2.6rem, 6.5vw, 5.5rem);
+  }
+  .display-lg {
+    @apply font-display font-semibold leading-[1.02] tracking-[-0.01em];
+    font-size: clamp(2.1rem, 4.6vw, 3.9rem);
+  }
+  .display-md {
+    @apply font-display font-semibold leading-[1.05];
+    font-size: clamp(1.5rem, 2.8vw, 2.4rem);
+  }
+}
+
+/* Hide scrollbar on the horizontal services track (it is driven by page scroll). */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

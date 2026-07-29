@@ -1,0 +1,10 @@
+{
+  // Kairova Solar demo site. Deploy with: npm run build && npx wrangler deploy
+  "name": "kairova-solar",
+  "compatibility_date": "2026-07-01",
+  "assets": {
+    "directory": "./dist",
+    // SPA fallback: refreshing any route serves index.html instead of a 404.
+    "not_found_handling": "single-page-application"
+  }
+}
