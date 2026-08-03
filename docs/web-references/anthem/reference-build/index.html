@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northwind — Moving what matters.</title>
+<meta name="description" content="Northwind is one of the largest independent freight operators in the Nordics.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   TOKENS  — §2 colour · §3 type · §4 grid  of the master prompt
+   ============================================================ */
+:root{
+  /* Variation Lever 1+2: warm grey canvas, signal orange accent.
+     Anthem's own values are cream #fcf7e3 / sky #3abff4.          */
+  --canvas:#e9e6e0;
+  --ink:#151412;
+  --accent:#e04e14;
+  --accent-deep:#2b2a26;
+  --pop:#c8d92f;
+
+  --theme-bg:var(--canvas);
+  --theme-text:var(--ink);
+  --theme-border:var(--ink);
+
+  --font:"Inter Tight",ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;
+
+  --max-width:120rem;
+  --gutter:.65rem;          /* §4 — the full-bleed gutter */
+  --pad-main:7rem;
+  --pad-small:5rem;
+  --pad-large:10rem;
+
+  --radius-main:4.375rem;
+  --radius-pill:100vw;
+  --border-w:1.5px;
+  --chamfer:2.8vw;          /* §5 — signature bevel */
+}
+
+body[data-theme="dark"]{
+  --theme-bg:#151412;
+  --theme-text:#e9e6e0;
+  --theme-border:#e9e6e0;
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+*{scrollbar-width:none;}
+::-webkit-scrollbar{display:none;}
+::selection{background:var(--accent-deep);color:var(--canvas);}
+
+html{-webkit-text-size-adjust:100%;}
+html.lenis{height:auto;}
+.lenis.lenis-smooth{scroll-behavior:auto !important;}
+.lenis.lenis-stopped{overflow:hidden;}
+
+body{
+  margin:0;
+  background:var(--theme-bg);
+  color:var(--theme-text);
+  font-family:var(--font);
+  font-size:1rem;line-height:1.5em;font-weight:400;
+  overscroll-behavior:none;
+  transition:color .3s cubic-bezier(.1,0,.3,1),background-color .3s cubic-bezier(.1,0,.3,1);
+}
+
+/* --- §3 type scale. Note h2 is LIGHTER than h1. --- */
+h1,h2,h3,h4,h5,h6{margin:0;font-weight:500;letter-spacing:-.03em;line-height:1.1em;}
+h1,.display{font-size:5rem;}
+h2{font-size:3.75rem;font-weight:300;}      /* the defining decision */
+h3{font-size:3rem;}
+h4{font-size:1.875rem;line-height:1.3em;letter-spacing:0;}
+h5{font-size:1.5rem;line-height:1.3em;letter-spacing:0;}
+h6,.eyebrow{font-size:1rem;line-height:1.3em;letter-spacing:0;font-weight:500;}
+p{margin:0 0 1em;}
+.t-large{font-size:1.25rem;line-height:1.3em;}
+.t-small{font-size:.875rem;line-height:1.5em;}
+/* derived from currentColor, not the theme token — so it stays legible
+   inside inverted panels (dark hero, accent footer) as well as on canvas */
+.faded{color:color-mix(in srgb,currentColor 60%,transparent);}
+a{color:inherit;text-decoration:none;}
+
+/* --- §4 layout --- */
+.section{
+  padding:var(--pad-main) var(--gutter);
+  max-width:var(--max-width);margin:0 auto;position:relative;
+}
+[data-pad-top="small"]{padding-top:var(--pad-small);}
+[data-pad-top="large"]{padding-top:var(--pad-large);}
+[data-pad-top="none"]{padding-top:0;}
+[data-pad-bottom="small"]{padding-bottom:var(--pad-small);}
+[data-pad-bottom="none"]{padding-bottom:0;}
+
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--gutter);}
+
+/* THE signature layout move: eyebrow far-left, content from col 6. */
+.eyebrow-col{grid-column:1 / span 4;}
+.content-col{grid-column:6 / span 7;}
+
+.rule{border:0;border-top:1px dotted color-mix(in srgb,var(--theme-text) 45%,transparent);margin:0;}
+
+/* --- §5 shape --- */
+[chamfer]{
+  clip-path:polygon(
+    0% var(--chamfer), var(--chamfer) 0%,
+    calc(100% - var(--chamfer)) 0%, 100% var(--chamfer),
+    100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%,
+    var(--chamfer) 100%, 0% calc(100% - var(--chamfer))
+  );
+}
+[chamfer="bottom"]{
+  clip-path:polygon(
+    0% 0%, 100% 0%,
+    100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%,
+    var(--chamfer) 100%, 0% calc(100% - var(--chamfer))
+  );
+}
+
+.btn{
+  display:inline-flex;align-items:center;gap:1.25rem;
+  padding:1.25rem 2.5rem;
+  border:var(--border-w) solid var(--theme-border);
+  border-radius:var(--radius-pill);
+  background:transparent;color:inherit;
+  font-size:1rem;font-weight:500;cursor:pointer;
+  font-family:inherit;
+}
+.btn svg{width:1.5rem;height:auto;stroke:currentColor;stroke-width:1.5;fill:none;}
+
+/* --- text-split reveal scaffolding (§6) --- */
+.s-line{overflow:hidden;padding-bottom:.1em;margin-bottom:-.1em;}
+[charsplit]{font-kerning:none;text-rendering:optimizeSpeed;transform:translateZ(0);}
+
+/* --- hover underline (§6) --- */
+[h-underline]{position:relative;display:inline-block;}
+[h-underline]::after{
+  content:"";position:absolute;left:0;top:100%;
+  width:100%;height:.065rem;background:currentColor;
+  transform:scaleX(0);transform-origin:right;
+  transition:transform .3s ease;
+}
+[h-underline]:hover::after{transform:scaleX(1);transform-origin:left;}
+
+/* ============================================================
+   PRELOADER
+   ============================================================ */
+.preloader{
+  position:fixed;inset:0;z-index:9000;
+  background:var(--canvas);color:var(--ink);
+  display:flex;align-items:flex-end;justify-content:space-between;
+  padding:var(--gutter) var(--gutter) 2rem;
+}
+.progress-number{font-size:5rem;font-weight:300;letter-spacing:-.03em;line-height:1;}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+.nav-wrap{position:fixed;top:0;left:0;width:100%;z-index:3000;padding:var(--gutter);}
+.nav-container{
+  display:flex;align-items:center;gap:3rem;
+  padding:1rem 1.75rem;border-radius:var(--radius-pill);
+  /* over the dark hero the nav is canvas-coloured; once scrolled past it
+     the pill background appears and the text flips to the theme ink */
+  color:var(--canvas);
+  transition:background-color .3s ease,color .3s ease;
+}
+.nav-wrap.scrolled .nav-container{background:var(--theme-bg);color:var(--theme-text);}
+.wordmark{font-size:1.5rem;font-weight:500;letter-spacing:-.03em;}
+.nav-links{display:flex;gap:2.5rem;margin-left:2rem;}
+.nav-spacer{flex:1;}
+.mode-toggle{
+  position:relative;overflow:hidden;height:1.4em;width:4.5rem;
+  cursor:pointer;font-weight:500;background:none;border:0;color:inherit;
+  font-family:inherit;font-size:1rem;padding:0;text-align:left;
+}
+.mode-text{position:absolute;left:0;top:0;transition:transform .4s ease-out;pointer-events:none;}
+.mode-text.is-b{transform:translateY(150%);}
+.mode-toggle:hover .mode-text.is-a{transform:translateY(-150%);}
+.mode-toggle:hover .mode-text.is-b{transform:translateY(0);}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{padding:var(--gutter);}
+.hero-panel{
+  position:relative;height:calc(100vh - (var(--gutter) * 2));min-height:38rem;
+  background:linear-gradient(155deg,#3a3833 0%,#22211d 55%,#151412 100%);
+  color:var(--canvas);
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:4rem 3rem 3rem;overflow:hidden;
+}
+/* stand-in for the hero video — abstract route lines */
+.hero-lines{position:absolute;inset:0;opacity:.16;}
+.hero-lines svg{width:100%;height:100%;}
+.hero-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:2.5rem;}
+.hero h1{max-width:16ch;}
+.scroll-cue{display:flex;align-items:center;gap:1rem;font-size:.875rem;}
+.scroll-cue svg{width:1rem;stroke:currentColor;stroke-width:1.5;fill:none;}
+
+/* ============================================================
+   MEDIA BLOCKS  (CSS-drawn stand-ins for photography)
+   ============================================================ */
+.media{position:relative;overflow:hidden;background:#cfcbc2;}
+.media.is-a{background:linear-gradient(140deg,#8d99a6,#5d6c7b 60%,#3f4a55);}
+.media.is-b{background:linear-gradient(140deg,#b9a68c,#8a7860 60%,#5f5140);}
+.media.is-c{background:linear-gradient(140deg,#9fb0a4,#6f8478 60%,#4b594f);}
+.media.tall{aspect-ratio:4 / 5;}
+.media.wide{aspect-ratio:16 / 9;}
+.media-inner{position:absolute;inset:0;width:100%;}
+
+/* ============================================================
+   LIST ROWS  (hover reveals thumbnail, dims siblings)
+   ============================================================ */
+.row{
+  display:grid;grid-template-columns:repeat(12,1fr);gap:var(--gutter);
+  align-items:center;padding:2.5rem 0;position:relative;
+  transition:opacity .45s cubic-bezier(.15,0,.85,1);
+}
+.row-thumb{
+  grid-column:2 / span 3;height:8rem;
+  opacity:0;transform:scale(.96);
+  transition:opacity .45s cubic-bezier(.15,0,.85,1),transform .65s ease-out;
+}
+.row-title{grid-column:6 / span 7;}
+.rows:hover .row{opacity:.35;}
+.rows .row:hover{opacity:1;}
+.row:hover .row-thumb{opacity:1;transform:scale(1);}
+
+/* ============================================================
+   HORIZONTAL SCROLL
+   ============================================================ */
+.hscroll{position:relative;}
+.hscroll-inner{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;align-items:center;}
+.hscroll-track{display:flex;gap:var(--gutter);padding:0 var(--gutter);will-change:transform;}
+.hcard{
+  flex:0 0 auto;width:44rem;height:78vh;
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:3rem;
+}
+.hcard.is-accent{background:var(--accent);color:var(--canvas);}
+.hcard.is-pop{background:var(--pop);color:var(--accent-deep);}
+.hcard.is-deep{background:var(--accent-deep);color:var(--canvas);}
+.hcard.is-media{padding:0;}
+.hcard .big-num{font-size:6.5rem;font-weight:300;letter-spacing:-.03em;line-height:1;}
+.hcard .big-num .s-char{display:inline-block;}
+
+/* ============================================================
+   STATS
+   ============================================================ */
+.stat-card{
+  border-radius:var(--radius-main);
+  background:var(--accent-deep);color:var(--canvas);
+  padding:3rem 2.5rem;
+  display:flex;flex-direction:column;justify-content:space-between;min-height:22rem;
+}
+.stat-card .n{font-size:5rem;font-weight:300;letter-spacing:-.03em;line-height:1;color:var(--accent);}
+
+/* ============================================================
+   FOOTER  — the one loud, full-bleed accent block
+   ============================================================ */
+.footer{
+  background:var(--accent);color:var(--canvas);
+  padding:var(--pad-main) var(--gutter) 2rem;
+  overflow:hidden;
+}
+.footer-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--gutter);}
+.footer-col{grid-column:span 4;display:flex;gap:2rem;}
+.footer-num{font-size:.875rem;opacity:.8;}
+.newsletter{
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  border:var(--border-w) solid currentColor;border-radius:var(--radius-pill);
+  padding:1.1rem 1.1rem 1.1rem 2rem;margin-top:2rem;
+}
+.newsletter input{
+  flex:1;background:none;border:0;color:inherit;font:inherit;outline:none;
+}
+.newsletter input::placeholder{color:color-mix(in srgb,currentColor 65%,transparent);}
+.newsletter button{background:none;border:0;color:inherit;cursor:pointer;display:flex;padding:0;}
+.newsletter svg{width:1.75rem;stroke:currentColor;stroke-width:1.5;fill:none;}
+.footer-mark{margin-top:6rem;overflow:hidden;}
+.footer-mark svg{width:100%;height:auto;display:block;fill:currentColor;}
+.footer-legal{
+  display:flex;gap:2rem;justify-content:space-between;
+  padding-top:2rem;margin-top:2rem;
+  border-top:1px dotted color-mix(in srgb,currentColor 45%,transparent);
+  font-size:.875rem;
+}
+
+/* ============================================================
+   RESPONSIVE — 992px is the single meaningful boundary (§9)
+   ============================================================ */
+@media (max-width:991px){
+  :root{--chamfer:5vw;--pad-main:4rem;--pad-large:5rem;--gutter:1rem;}
+  h1,.display{font-size:2.75rem;}
+  h2{font-size:2.125rem;}
+  h3{font-size:1.75rem;}
+  .eyebrow-col,.content-col{grid-column:1 / -1;}
+  .eyebrow-col{margin-bottom:1.5rem;}
+  .nav-links{display:none;}
+  .row{grid-template-columns:1fr;gap:1rem;}
+  .row-thumb{display:none;}
+  .row-title{grid-column:1 / -1;}
+  .hcard{width:82vw;height:64vh;padding:2rem;}
+  .hcard .big-num{font-size:3.5rem;}
+  .stat-card .n{font-size:3rem;}
+  .footer-col{grid-column:1 / -1;}
+  .hero-panel{padding:2rem 1.5rem;}
+}
+
+/* §6 — reduced motion. Anthem ships none of this; the spec requires it. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;scroll-behavior:auto !important;
+  }
+  .preloader{display:none !important;}
+}
+</style>
+</head>
+
+<body data-theme="light">
+
+<!-- ========== PRELOADER ========== -->
+<div class="preloader" aria-hidden="true">
+  <span class="t-small">Northwind</span>
+  <span class="progress-number">000</span>
+</div>
+
+<!-- ========== NAV ========== -->
+<nav class="nav-wrap">
+  <div class="nav-container">
+    <a class="wordmark" href="#">Northwind</a>
+    <div class="nav-links">
+      <a href="#about"><span h-underline>About</span></a>
+      <a href="#services"><span h-underline>Services</span></a>
+      <a href="#network"><span h-underline>Network</span></a>
+    </div>
+    <span class="nav-spacer"></span>
+    <button class="mode-toggle" id="modeToggle" aria-label="Toggle colour theme">
+      <span class="mode-text is-a">Dark</span>
+      <span class="mode-text is-b">Light</span>
+    </button>
+  </div>
+</nav>
+
+<main class="page-content">
+
+  <!-- ========== HERO ========== -->
+  <header class="hero">
+    <div class="hero-panel" chamfer>
+      <div class="hero-lines" aria-hidden="true">
+        <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
+          <g stroke="#e9e6e0" stroke-width="1.5" fill="none">
+            <path d="M-50 700 C 250 640, 420 420, 700 380 S 1100 200, 1260 120"/>
+            <path d="M-50 780 C 300 720, 500 520, 780 470 S 1120 300, 1260 220"/>
+            <path d="M-50 620 C 220 560, 380 330, 640 290 S 1060 110, 1260 30"/>
+            <circle cx="700" cy="380" r="7" fill="#e9e6e0" stroke="none"/>
+            <circle cx="290" cy="602" r="7" fill="#e9e6e0" stroke="none"/>
+            <circle cx="1010" cy="246" r="7" fill="#e9e6e0" stroke="none"/>
+          </g>
+        </svg>
+      </div>
+      <h1 charsplit pload-lines>Moving what matters.</h1>
+      <div class="hero-foot">
+        <p class="t-small faded" style="max-width:44ch;margin:0" pload-fade>
+          Northwind is one of the largest independent freight operators in the Nordics.
+          We plan, move, store and deliver at national scale.
+        </p>
+        <span class="scroll-cue" pload-fade>
+          Scroll to discover more
+          <svg viewBox="0 0 24 24"><path d="M12 3v18M6 15l6 6 6-6"/></svg>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========== INTRO ========== -->
+  <section class="section" id="about" grow-in-view>
+    <div class="grid">
+      <div class="eyebrow-col"><h6 class="eyebrow" s-fade>About Us</h6></div>
+      <div class="content-col">
+        <h2 charsplit h-scroll-anim>Forty depots. One network.</h2>
+        <p class="t-large faded text-reveal" charsplit style="margin-top:2.5rem;max-width:60ch">
+          We run scheduled freight across nine hundred vehicles and forty depots, from
+          first-mile collection through to final delivery. Every load is planned in-house,
+          driven by our own people, and tracked end to end.
+        </p>
+        <div class="media wide" chamfer data-scroll-scale style="margin-top:3rem">
+          <div class="media-inner is-a media"></div>
+        </div>
+        <button class="btn" b-magnet style="margin-top:3rem">
+          Learn more about Northwind
+          <svg viewBox="0 0 24 24"><path d="M3 12h18M15 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== WHAT WE DO ========== -->
+  <section class="section" id="services" data-pad-top="small">
+    <div class="grid" style="margin-bottom:3rem">
+      <div class="eyebrow-col"><h6 class="eyebrow" s-fade>What We Do</h6></div>
+    </div>
+    <div class="rows">
+      <hr class="rule">
+      <div class="row">
+        <div class="media row-thumb is-b" chamfer></div>
+        <h3 class="row-title" charsplit h-scroll-anim>Scheduled Line Haul</h3>
+      </div>
+      <hr class="rule">
+      <div class="row">
+        <div class="media row-thumb is-a" chamfer></div>
+        <h3 class="row-title" charsplit h-scroll-anim>Temperature Controlled</h3>
+      </div>
+      <hr class="rule">
+      <div class="row">
+        <div class="media row-thumb is-c" chamfer></div>
+        <h3 class="row-title" charsplit h-scroll-anim>Warehousing &amp; Fulfilment</h3>
+      </div>
+      <hr class="rule">
+      <div class="row">
+        <div class="media row-thumb is-b" chamfer></div>
+        <h3 class="row-title" charsplit h-scroll-anim>Final Mile Delivery</h3>
+      </div>
+      <hr class="rule">
+    </div>
+  </section>
+
+  <!-- ========== HORIZONTAL SCROLL ========== -->
+  <section class="hscroll" id="network">
+    <div class="hscroll-inner">
+      <div class="hscroll-track">
+        <div class="hcard is-accent" chamfer>
+          <h6 class="eyebrow">01 — Reach</h6>
+          <div>
+            <div class="big-num" charsplit>900</div>
+            <p class="t-large" style="margin-top:1rem">vehicles on the road every day</p>
+          </div>
+        </div>
+        <div class="hcard is-media media is-a" chamfer></div>
+        <div class="hcard is-deep" chamfer>
+          <h6 class="eyebrow">02 — Scale</h6>
+          <div>
+            <div class="big-num" charsplit style="color:var(--accent)">2.1M</div>
+            <p class="t-large" style="margin-top:1rem">deliveries completed a year</p>
+          </div>
+        </div>
+        <div class="hcard is-media media is-c" chamfer></div>
+        <div class="hcard is-pop" chamfer>
+          <h6 class="eyebrow">03 — Footprint</h6>
+          <div>
+            <div class="big-num" charsplit>40</div>
+            <p class="t-large" style="margin-top:1rem">depots across five countries</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== STATS ========== -->
+  <section class="section" data-pad-top="large">
+    <div class="grid">
+      <div class="eyebrow-col"><h6 class="eyebrow" s-fade>By the numbers</h6></div>
+      <div class="content-col">
+        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="stat-card" s-fade>
+            <p class="t-small">On-time delivery, measured across all scheduled freight</p>
+            <div><div class="n">98.4%</div></div>
+          </div>
+          <div class="stat-card" s-fade>
+            <p class="t-small">Fleet converted to electric or HVO by end of next year</p>
+            <div><div class="n">61%</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ========== FOOTER ========== -->
+<div class="footer-component">
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <span class="footer-num">01</span>
+        <div>
+          <h3 style="margin-bottom:2rem">Get in Touch.</h3>
+          <p class="t-small">Have a question or need a quote?<br>
+            Email <a href="#" h-underline>freight@northwind.example</a>.</p>
+          <p class="t-small">Northwind,<br>Hamngatan 12,<br>411 06 Göteborg,<br>Sweden</p>
+        </div>
+      </div>
+      <div class="footer-col" style="grid-column:9 / span 4">
+        <span class="footer-num">02</span>
+        <div style="width:100%">
+          <h3 style="margin-bottom:2rem">News.</h3>
+          <p class="t-small">Join our newsletter for network and service updates.</p>
+          <form class="newsletter" onsubmit="return false">
+            <input type="email" placeholder="Enter your email address" aria-label="Email address">
+            <button type="submit" aria-label="Subscribe">
+              <svg viewBox="0 0 24 24"><path d="M3 12h18M15 6l6 6-6 6"/></svg>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-mark" aria-hidden="true">
+      <svg viewBox="0 0 1000 110" preserveAspectRatio="xMidYMid meet">
+        <text x="0" y="88" font-family="Inter Tight, sans-serif" font-size="112"
+              font-weight="500" letter-spacing="-3">NORTHWIND</text>
+      </svg>
+    </div>
+
+    <div class="footer-legal">
+      <span>© <span data-year></span> Northwind. All rights reserved.</span>
+      <span><a href="#" h-underline>Privacy</a> &nbsp; <a href="#" h-underline>Terms</a></span>
+    </div>
+  </footer>
+</div>
+
+<!-- ============================================================
+     MOTION  — §6 of the master prompt
+     ============================================================ -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/CustomEase.min.js"></script>
+<script src="https://unpkg.com/lenis@1.3.11/dist/lenis.min.js"></script>
+<script>
+(function () {
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  gsap.registerPlugin(ScrollTrigger, CustomEase);
+
+  /* --- The house easing curve. Reused everywhere. --- */
+  CustomEase.create("primary-ease", "M0,0 C0.15,0 0.15,1 1,1");
+
+  /* --- Smooth scroll, driven by the GSAP ticker --- */
+  var lenis = null;
+  if (!reduced) {
+    lenis = new Lenis({ syncTouch: true, syncTouchLerp: 0.075, touchInertiaExponent: 1.7 });
+    lenis.on("scroll", ScrollTrigger.update);
+    gsap.ticker.add(function (t) { lenis.raf(t * 1000); });
+    gsap.ticker.lagSmoothing(0);
+  }
+
+  var mm = gsap.matchMedia();
+
+  /* ------------------------------------------------------------
+     Line / word splitting.
+     SplitText is a paid GSAP plugin, so this is a minimal
+     stand-in that produces the same .s-line / .s-word hooks.
+     ------------------------------------------------------------ */
+  function splitLines(el) {
+    if (el.dataset.split) return;
+    var words = el.textContent.trim().split(/\s+/);
+    el.textContent = "";
+    var frag = document.createDocumentFragment();
+    words.forEach(function (w, i) {
+      var s = document.createElement("span");
+      s.className = "s-word";
+      s.style.display = "inline-block";
+      s.textContent = w + (i < words.length - 1 ? " " : "");
+      frag.appendChild(s);
+    });
+    el.appendChild(frag);
+    el.dataset.split = "1";
+
+    // group words into visual lines by their offsetTop
+    var lines = [], last = null;
+    el.querySelectorAll(".s-word").forEach(function (w) {
+      if (last === null || Math.abs(w.offsetTop - last) > 4) { lines.push([]); last = w.offsetTop; }
+      lines[lines.length - 1].push(w);
+    });
+    lines.forEach(function (words) {
+      var line = document.createElement("span");
+      line.className = "s-line";
+      line.style.display = "block";
+      words[0].parentNode.insertBefore(line, words[0]);
+      words.forEach(function (w) { line.appendChild(w); });
+    });
+    // char split for the big numerals
+    if (el.classList.contains("big-num")) {
+      el.querySelectorAll(".s-word").forEach(function (w) {
+        var txt = w.textContent, out = document.createDocumentFragment();
+        [].forEach.call(txt, function (c) {
+          var s = document.createElement("span");
+          s.className = "s-char"; s.textContent = c;
+          out.appendChild(s);
+        });
+        w.textContent = ""; w.appendChild(out);
+      });
+    }
+  }
+  document.querySelectorAll("[charsplit]").forEach(splitLines);
+
+  /* --- Re-split on WIDTH change only (avoids mobile URL-bar thrash) --- */
+  var lastW = window.innerWidth;
+  window.addEventListener("resize", function () {
+    if (window.innerWidth !== lastW) { lastW = window.innerWidth; ScrollTrigger.refresh(); }
+  });
+
+  /* ------------------------------------------------------------
+     PRELOADER  →  page reveal (the chamfer animates open)
+     ------------------------------------------------------------ */
+  var pre = document.querySelector(".preloader");
+  var counter = { value: 0 };
+
+  function pageReveal(tl) {
+    tl.fromTo(".page-content", { y: "100vh" }, { y: "0vh", duration: 1, ease: "primary-ease" });
+    tl.fromTo(".page-content",
+      { scaleX: 0.9,
+        clipPath: "polygon(5rem 0%, calc(100% - 5rem) 0%, 100% 5rem, 100% 100%, 100% 100%, 0% 100%, 0% 100%, 0% 5rem)" },
+      { scaleX: 1,
+        clipPath: "polygon(0rem 0%, calc(100% - 0rem) 0%, 100% 0rem, 100% 100%, 100% 100%, 0% 100%, 0% 100%, 0% 0rem)",
+        duration: 1, ease: "power1.inOut", clearProps: "all" }, "<");
+    tl.fromTo("[pload-lines] .s-line",
+      { yPercent: 100, clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)" },
+      { yPercent: 0, clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+        ease: "expo.out", duration: 1.1, stagger: 0.1 }, "<");
+    tl.from("[pload-fade]", { opacity: 0, duration: 1, ease: "primary-ease" }, "<");
+    tl.fromTo(".nav-wrap", { yPercent: -100 }, { yPercent: 0, ease: "expo.out", duration: 1 }, "<25%");
+  }
+
+  if (reduced) {
+    pre.style.display = "none";
+  } else {
+    if (lenis) lenis.stop();
+    var loadTl = gsap.timeline({
+      onComplete: function () { if (lenis) lenis.start(); ScrollTrigger.refresh(); }
+    });
+    loadTl.to(counter, {
+      value: 99, duration: 1.6, ease: "power2.inOut",
+      onUpdate: function () {
+        document.querySelector(".progress-number").textContent =
+          String(Math.round(counter.value)).padStart(3, "0");
+      }
+    });
+    loadTl.to(".preloader", { yPercent: -110, duration: 0.8, ease: "primary-ease" });
+    pageReveal(loadTl);
+  }
+
+  /* ------------------------------------------------------------
+     SCROLL EFFECTS — all attribute-driven
+     ------------------------------------------------------------ */
+
+  // line reveal behind a clip-path wipe
+  document.querySelectorAll("[h-scroll-anim]").forEach(function (el) {
+    gsap.timeline({ scrollTrigger: { trigger: el, start: "top 90%", toggleActions: "play none none reverse" } })
+      .fromTo(el.querySelectorAll(".s-line"),
+        { yPercent: 100, clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)" },
+        { yPercent: 0, clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+          ease: "primary-ease", duration: 1, stagger: 0.1 });
+  });
+
+  // word-by-word illumination, scrubbed
+  document.querySelectorAll(".text-reveal").forEach(function (el) {
+    gsap.timeline({ scrollTrigger: { trigger: el, start: "top 90%", end: "bottom center", scrub: 1 } })
+      .fromTo(el.querySelectorAll(".s-word"), { opacity: 0.1 },
+        { opacity: 1, ease: "none", stagger: 0.05 });
+  });
+
+  // simple fade
+  document.querySelectorAll("[s-fade]").forEach(function (el) {
+    gsap.timeline({ scrollTrigger: { trigger: el, start: "top 85%", toggleActions: "play none none none" } })
+      .fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.6, ease: "sine.in" });
+  });
+
+  // sections widen into full bleed.
+  // Lands on the gutter rather than 0 — animating to 0 overrides the section's
+  // own horizontal padding and clips the far-left eyebrow off the viewport.
+  document.querySelectorAll("[grow-in-view]").forEach(function (el) {
+    var gutter = getComputedStyle(el).paddingLeft || "0.65rem";
+    gsap.timeline({ scrollTrigger: { trigger: el, start: "clamp(top bottom)", end: "clamp(top center)", scrub: true } })
+      .fromTo(el, { paddingLeft: "5rem", paddingRight: "5rem" },
+        { paddingLeft: gutter, paddingRight: gutter, ease: "none" });
+  });
+
+  // frame opens while the image inside settles
+  document.querySelectorAll("[data-scroll-scale]").forEach(function (el) {
+    var tl = gsap.timeline({ scrollTrigger: { trigger: el, start: "top 100%", end: "bottom center", scrub: true } });
+    tl.fromTo(el, { width: "50%" }, { width: "100%", ease: "none" });
+    tl.fromTo(el.querySelector(".media-inner"), { width: "150%" }, { width: "100%", ease: "none" }, "<");
+  });
+
+  /* --- Horizontal scroll --- */
+  document.querySelectorAll(".hscroll").forEach(function (wrap) {
+    var track = wrap.querySelector(".hscroll-track");
+    function setHeight() { wrap.style.height = track.scrollWidth + window.innerHeight + "px"; }
+    setHeight();
+    window.addEventListener("resize", setHeight);
+
+    gsap.timeline({
+      scrollTrigger: { trigger: wrap, start: "top top", end: "bottom bottom", scrub: true },
+      defaults: { ease: "none" }
+    }).to(track, { x: function () { return -(track.scrollWidth - window.innerWidth); } });
+
+    wrap.querySelectorAll(".big-num").forEach(function (num) {
+      gsap.timeline({ scrollTrigger: { trigger: num, start: "top 90%", toggleActions: "play none none none" } })
+        .fromTo(num.querySelectorAll(".s-char"),
+          { opacity: 0, rotationX: -90, yPercent: 50 },
+          { opacity: 1, rotationX: 0, yPercent: 0, duration: 1.2, ease: "circ.out", stagger: { each: 0.1 } });
+    });
+  });
+
+  /* --- Footer rise + wordmark --- */
+  mm.add("(min-width: 992px)", function () {
+    gsap.timeline({ scrollTrigger: { trigger: ".footer", start: "top bottom", toggleActions: "play none none reset" } })
+      .fromTo(".footer", { y: "10rem" }, { y: "0rem", duration: 1.4, ease: "expo.out" });
+    gsap.timeline({ scrollTrigger: { trigger: ".footer-mark", start: "top 90%", toggleActions: "play none none reset" } })
+      .fromTo(".footer-mark svg", { y: "8rem" }, { y: "0rem", duration: 1.4, ease: "expo.out" });
+  });
+
+  /* ------------------------------------------------------------
+     NAV — hide on scroll down, pill background after 400px
+     ------------------------------------------------------------ */
+  var menuHide = gsap.timeline({ paused: true });
+  menuHide.fromTo(".nav-wrap", { yPercent: 0 }, { yPercent: -110, duration: 0.4, ease: "sine.inOut" });
+
+  if (lenis) {
+    lenis.on("scroll", function (e) {
+      if (e.direction === 1) menuHide.play(); else if (e.direction === -1) menuHide.reverse();
+    });
+  }
+
+  ScrollTrigger.create({
+    trigger: ".page-content", start: "top top", end: "+=400",
+    onLeave: function () { document.querySelector(".nav-wrap").classList.add("scrolled"); },
+    onEnterBack: function () { document.querySelector(".nav-wrap").classList.remove("scrolled"); }
+  });
+
+  /* --- Magnetic buttons --- */
+  mm.add("(min-width: 992px)", function () {
+    document.querySelectorAll("[b-magnet]").forEach(function (el) {
+      var strength = 0.2, max = 30, rect = el.getBoundingClientRect();
+      var recalc = function () { rect = el.getBoundingClientRect(); };
+      window.addEventListener("resize", recalc);
+      el.addEventListener("pointerenter", recalc);
+      el.addEventListener("pointermove", function (e) {
+        var dx = e.clientX - rect.left - rect.width / 2;
+        var dy = e.clientY - rect.top - rect.height / 2;
+        gsap.to(el, {
+          x: Math.max(-max, Math.min(max, dx * strength)),
+          y: Math.max(-max, Math.min(max, dy * strength)),
+          duration: 0.2, ease: "power2.out", overwrite: "auto"
+        });
+      });
+      el.addEventListener("pointerleave", function () {
+        gsap.to(el, { x: 0, y: 0, duration: 0.5, ease: "sine", overwrite: "auto" });
+      });
+    });
+  });
+
+  /* --- Theme toggle --- */
+  document.getElementById("modeToggle").addEventListener("click", function () {
+    var b = document.body;
+    b.dataset.theme = b.dataset.theme === "light" ? "dark" : "light";
+  });
+
+  /* --- Utility --- */
+  document.querySelectorAll("[data-year]").forEach(function (el) {
+    el.textContent = new Date().getFullYear();
+  });
+})();
+</script>
+</body>
+</html>
