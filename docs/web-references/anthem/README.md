@@ -5,7 +5,8 @@ a reusable prompt for building sites in the same idiom.
 
 | File | What it is |
 |---|---|
-| [`ANTHEM_STYLE_WEBSITE_PROMPT.md`](ANTHEM_STYLE_WEBSITE_PROMPT.md) | **Start here.** Copy-paste prompt for an AI design/build tool: fill-in brief, master spec, and variation levers for making it *not* a clone. |
+| [`SEND-THIS.md`](SEND-THIS.md) | **The thing you actually paste.** Self-contained spec with no meta-commentary and no mention of any source site. Fill in 8 slots, copy, send. Full and compact versions. |
+| [`ANTHEM_STYLE_WEBSITE_PROMPT.md`](ANTHEM_STYLE_WEBSITE_PROMPT.md) | The working document behind it: same spec plus the variation levers for making the output *not* a clone, and notes on what not to reproduce. Read this; don't paste it. |
 | [`anthem-teardown.md`](anthem-teardown.md) | Technical evidence: exact design tokens, the chamfer clip-path, the full GSAP/Lenis/Barba motion catalogue with real code, layout patterns, and a build critique. |
 | [`reference-build/`](reference-build/) | A working single-file site built from the prompt alone, for a different brand in a different sector — proof the spec transposes. Open `index.html`; no build step. |
 
